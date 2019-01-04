@@ -33,6 +33,10 @@ if !$debug_init
         def build_channel(id, &block)
             run [], id, &block
         end
+
+        def report(str)
+            Debug.run([:report, str]){}
+        end
     end
 
     class << Graphics
@@ -50,7 +54,7 @@ Debug.build_channel(:debug) do |ret|
         begin
             eval ret, TOPLEVEL_BINDING, "<debug:#{id+=1}>", 1
         rescue Exception
-            Debug.run([:report, $!.backtrace.unshift($!.to_s).join("\n")]){}
+            Debug.report $!.backtrace.unshift($!.to_s).join("\n")
         end
     end
 end
@@ -61,6 +65,10 @@ r = load_data(RUNARGS[2])
     begin
         eval x[3], TOPLEVEL_BINDING, x[1], 1
     rescue Exception
-        msgbox $!.backtrace.unshift($!.to_s).join("\n")
+        if defined?(msgbox)
+            msgbox $!.backtrace.unshift($!.to_s).join("\n")
+        else
+            print $!.backtrace.unshift($!.to_s).join("\n")
+        end
     end
 }

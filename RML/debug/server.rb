@@ -37,7 +37,7 @@ def start_daemon(port)
             CHANNEL.to_a.each{|id, thrd|
                 if not OUTQUEUE[id].empty?
                     IO.select([], [port], [])
-                    Marshal.dump(p([id, OUTQUEUE[id].shift]), port).flush
+                    Marshal.dump([id, OUTQUEUE[id].shift], port).flush
                 end
                 Thread.pass
             }
@@ -49,7 +49,12 @@ def start_daemon(port)
 end
 
 def report(str)
-    puts str
+    str = str.to_s
+    puts ""
+    str.split("\n").each{|x|
+        puts "[REPORT]#{x}"
+    }
+    puts ""
 end
 
 def channel_run_once
@@ -87,15 +92,21 @@ def process_input((stdin, stdout, stderr))
             exit!
         end
         id, obj = msg
-        channel(id){
-            if !obj.empty?
-                yield_msg send *obj    
-            else
-                
-            end
-        }
+        if CHANNEL[id] && CHANNEL[id].alive?
+            send_msg id, obj
+        else
+            channel(id){
+                if !obj.empty?
+                    yield_msg send *obj    
+                else
+                    
+                end
+            }
+        end
     end
 end
+
+
 
 @main = Thread.new do
     Open3.popen3("Game.exe") do |stdin, stdout, stderr, thr|
