@@ -5,6 +5,7 @@ x = if x.unpack("CCC") == [0xef, 0xbb, 0xbf]
     else
         x
     end
+runargs = "RUNARGS = #{ARGV.inspect}"
 script = 
-[[0, "", Zlib::Deflate.deflate(x, 9)]]
+[[0, "", Zlib::Deflate.deflate(runargs, 9)], [1, "", Zlib::Deflate.deflate(x, 9)]]
 open(ARGV[1], "wb") do |f| Marshal.dump script, f end

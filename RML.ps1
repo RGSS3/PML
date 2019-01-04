@@ -6,10 +6,18 @@ param (
     [string]$Gen,
     [string[]]$Arglist, 
     [string] $Title,
-    [string] $Command,
-    [string] $OutFile,
-    [switch] $NoCopy
+    [string] $Pack,
+    [switch] $NoCopy,
+    [switch] $NoRemove,
+    [switch] $Debug,
+    [switch] $Clean
 )
+
+if ($Clean){
+    Remove-Item runid_* -Force -Recurse
+    exit
+} 
+        
 
 $ini = Add-Type -memberDefinition @"
 [DllImport("Kernel32")]
@@ -20,13 +28,12 @@ string val ,
 string filePath );
 "@ -passthru -name MyPrivateProfileString
 
-$ruby = "RM3/ruby/bin/ruby.exe"
-$f2s  = "RML/file2script.rb"
+$ruby = (Get-Item "RM3/ruby/bin/ruby.exe").FullName
+$f2s  = (Get-Item "RML/file2script.rb").FullName
 $suffix = @{
     RMXP  = "rxdata";
     RMVX  = "rvdata";
     RMVXA = "rvdata2";
-    RMVA  = "rvdata2"
 }
 
 if ($gen -eq $null -or $gen -eq "") {
@@ -56,7 +63,7 @@ if ($file) {
     if ($code) {
         $code | Out-File -Encoding utf8 $dir/main.rb
         $suf = $suffix[$gen]
-        &$ruby $f2s "$dir/main.rb" "$dir/Data/Scripts.$suf"
+        Start-Process $ruby -ArgumentList $f2s, "$dir/main.rb", "$dir/Data/Scripts.$suf" -Wait -WindowStyle Hidden
     } else {
         if ($FromDir) {
             copy-item $FromDir\* $dir -Force -Recurse
@@ -78,17 +85,28 @@ if ($title) {
     $null = $ini::WritePrivateProfileString("Game", "Title", $title, "$dir/Game.ini")
 }
 "Game.exe " + [System.String]::Join(" ", $arglist) | Out-File -Encoding Ascii "$dir/run.cmd"
-if (-not $command) {
-    $command = "run"
+
+if ($debug) {
+        Copy-Item "RML\debug\*" "$dir"
+        Start-Process $ruby -ArgumentList $f2s, "$dir/client.rb", "$dir/Data/DebugClient.$suf","Data/Scripts.$suf" -Wait -WindowStyle Hidden
+        $null = $ini::WritePrivateProfileString("Game", "Scripts", "Data/DebugClient.$suf", "$dir/Game.ini")
+        pushd $dir
+        Start-Process "cmd" -ArgumentList /c, "$ruby server.rb" -Wait
+        popd
+} else {
+    if ($Pack) {
+        Compress-Archive $dir\* $Pack -Force
+    } else {
+            pushd $dir
+            Start-Process "run.cmd" -Wait -WindowStyle Hidden
+            popd
+        
+    }
 }
 
-if ($command -eq "run") {
-    pushd $dir
-    Start-Process "run.cmd" -Wait -WindowStyle Hidden
-    popd
-}
 
-if ($command -eq "pack") {
-    Compress-Archive $dir\* $OutFile -Force
+if (-not $NoRemove) {
+    Remove-Item $dir -Recurse
+} else {
+    Write-Host "File preserved at $dir"
 }
-Remove-Item $dir -Recurse
