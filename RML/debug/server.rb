@@ -80,6 +80,7 @@ def channel(sym = fresh, &block)
     t.report_on_exception = true
     t[:in]  = INQUEUE[sym] = Queue.new
     t[:out] = OUTQUEUE[sym] = Queue.new
+    puts "Build channel #{sym}" unless sym.to_s[0] == "_"
     CHANNEL[sym] = t
 end
 

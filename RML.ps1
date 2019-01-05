@@ -18,15 +18,22 @@ if ($Clean){
     exit
 } 
         
+function inimodify($filename, $a, $b) {
+    $content = Get-Content $filename
+    $out = @()
+    foreach($line in $content) {
+        $outline = $line
+        if ($line[0] -ne "[") {
+            $name, $value = $line.Split("=")
+            if ($name -eq $a) {
+                $outline = $a + "=" + $b
+            }
+        }
+        $out += $outline
+    }
+    Set-Content $filename $out
+}
 
-$ini = Add-Type -memberDefinition @"
-[DllImport("Kernel32")]
-public static extern long WritePrivateProfileString (
-string section ,
-string key , 
-string val , 
-string filePath );
-"@ -passthru -name MyPrivateProfileString
 
 $ruby = (Get-Item "RM3/ruby/bin/ruby.exe").FullName
 $f2s  = (Get-Item "RML/file2script.rb").FullName
@@ -82,14 +89,14 @@ if ($arglist -eq $null) {
     $arglist = @()
 }
 if ($title) {
-    $null = $ini::WritePrivateProfileString("Game", "Title", $title, "$dir/Game.ini")
+    inimodify "$dir/Game.ini" "Title" $title
 }
 "Game.exe " + [System.String]::Join(" ", $arglist) | Out-File -Encoding Ascii "$dir/run.cmd"
 
 if ($debug) {
         Copy-Item "RML\debug\*" "$dir"
         Start-Process $ruby -ArgumentList $f2s, "$dir/client.rb", "$dir/Data/DebugClient.$suf","Data/Scripts.$suf" -Wait -WindowStyle Hidden
-        $null = $ini::WritePrivateProfileString("Game", "Scripts", "Data/DebugClient.$suf", "$dir/Game.ini")
+        inimodify "$dir/Game.ini" "Scripts" "Data/DebugClient.$suf"
         pushd $dir
         Start-Process "cmd" -ArgumentList /c, "$ruby server.rb" -Wait
         popd
