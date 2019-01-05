@@ -41,6 +41,7 @@ $suffix = @{
     RMXP  = "rxdata";
     RMVX  = "rvdata";
     RMVXA = "rvdata2";
+    RGD   = "rvdata2";
 }
 
 if ($gen -eq $null -or $gen -eq "") {
