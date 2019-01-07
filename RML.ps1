@@ -1,20 +1,26 @@
 param (
-    [string]$Code,
-    [string]$File,
-    [string]$FromDir,
-    [string]$ZipFile,
-    [string]$Gen,
-    [string[]]$Arglist, 
-    [string] $Title,
-    [string] $Pack,
-    [switch] $NoCopy,
-    [switch] $NoRemove,
-    [switch] $Debug,
-    [switch] $Clean
+    [string]   $Code,
+    [string]   $File,
+    [string]   $FromDir,
+    [string]   $ZipFile,
+    [string]   $Gen,
+    [string[]] $Arglist, 
+    [string]   $Title,
+    [string]   $Pack,
+    [switch]   $NoCopy,
+    [switch]   $NoRemove,
+    [switch]   $Debug,
+    [switch]   $Clean
 )
 
 if ($Clean){
-    Remove-Item runid_* -Force -Recurse
+    foreach ($a in Get-Item "runid_*") {
+        $pids = Get-Content "$a/pid" -erroraction 'silentlycontinue'
+        foreach ($onepid in $pids) {
+            Stop-Process -id $onepid -erroraction 'silentlycontinue'
+        }
+        Remove-Item $a -fo -r -erroraction 'silentlycontinue'
+    }
     exit
 } 
         
@@ -63,8 +69,8 @@ if (-not $NoCopy) {
         $null = mkdir $dir
     }
 }
+$suf = $suffix[$gen]
 if ($file) { 
-    copy $file $dir/main.rb
     $suf = $suffix[$gen]
     &$ruby $f2s "$dir/main.rb" "$dir/Data/Scripts.$suf"
 } else {
@@ -79,8 +85,7 @@ if ($file) {
             if ($ZipFile) {
                 Expand-Archive $ZipFile $dir -Force 
             } else {
-                Write-Error "No -Code or -File present"
-                exit
+                
             }
         }
     }
@@ -92,8 +97,7 @@ if ($arglist -eq $null) {
 if ($title) {
     inimodify "$dir/Game.ini" "Title" $title
 }
-"Game.exe " + [System.String]::Join(" ", $arglist) | Out-File -Encoding Ascii "$dir/run.cmd"
-
+#"Game.exe " + [System.String]::Join(" ", $arglist) | Out-File -Encoding Ascii "$dir/run.cmd"
 if ($debug) {
         Copy-Item "RML\debug\*" "$dir"
         Start-Process $ruby -ArgumentList $f2s, "$dir/client.rb", "$dir/Data/DebugClient.$suf","Data/Scripts.$suf" -Wait -WindowStyle Hidden
@@ -106,7 +110,9 @@ if ($debug) {
         Compress-Archive $dir\* $Pack -Force
     } else {
             pushd $dir
-            Start-Process "run.cmd" -Wait -WindowStyle Hidden
+            $proc =      Start-Process "Game.exe" -WindowStyle Hidden -PassThru
+            $proc.id | Out-File "pid" 
+            Wait-Process -id $proc.id
             popd
         
     }
