@@ -107,8 +107,6 @@ def process_input((stdin, stdout, stderr))
     end
 end
 
-
-
 @main = Thread.new do
     Open3.popen3("Game.exe") do |stdin, stdout, stderr, thr|
         ios = [stdin, stdout, stderr]
