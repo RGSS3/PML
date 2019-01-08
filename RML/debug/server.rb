@@ -108,12 +108,12 @@ def process_input((stdin, stdout, stderr))
     end
 end
 
-
-IO.append "pid", "#{Process.pid}\n"
+open("pid", "a") { |f| f.write "#{Process.pid}\n" }
+IO.write "pid", "#{Process.pid}\n"
 @main = Thread.new do
     Open3.popen3("Game.exe") do |stdin, stdout, stderr, thr|
         ios = [stdin, stdout, stderr]
-        IO.append "pid", "#{thr.pid}\n"
+        open("pid", "a") { |f| f.write "#{thr.pid}\n" }
         ios.each(&:binmode)
         start_daemon(stdin)
         loop do

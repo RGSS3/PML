@@ -22,7 +22,7 @@ if ($Clean){
         Remove-Item $a -fo -r -erroraction 'silentlycontinue'
     }
     exit
-} 
+}
         
 function inimodify($filename, $a, $b) {
     $content = Get-Content $filename
@@ -91,12 +91,6 @@ if ($file) {
     }
 }
 
-if ($arglist -eq $null) {
-    $arglist = @()
-}
-if ($title) {
-    inimodify "$dir/Game.ini" "Title" $title
-}
 #"Game.exe " + [System.String]::Join(" ", $arglist) | Out-File -Encoding Ascii "$dir/run.cmd"
 if ($debug) {
         Copy-Item "RML\debug\*" "$dir"
