@@ -52,7 +52,6 @@ if (-not (Test-Path $dir)) {
     mkdir "$dir\.rml" | Out-Null
 }
 
-
 $dir = (Get-Item $dir).FullName
 $rc["dir"] = $dir
 $rc["template"] = (Get-Item "Templates").FullName
@@ -63,6 +62,8 @@ $rc["command"]  = $Command
 $rc["gen"]  = $gen
 $rc["gendir"] = $dir + "\.rml"
 $rc["gencmd"] = $rc["gendir"] + "\" + $rc["command"] + ".ps1"
+
+
 $rc["code"]  = $code
 $rc["file"]  = $file
 $rc["fromDir"] = $FromDir
@@ -73,9 +74,16 @@ $rc["NoRemove"] = $NoRemove
 $rc["empty"]    = $Empty
 $rc["outFile"]  = $OutFile
 $rc["RML.ruby"] = (Get-Item "RML").FullName
+
 if ($NoCopy) {
     Copy-Item ($rc["tplrml"] + "\*") $rc["gendir"] -Force -Recurse
 } else {
     Copy-Item ($rc["tpldir"] + "\*") $rc["dir"] -Force -Recurse
 }
+if (-not (Test-Path $rc["gencmd"])) {
+    Write-Error "Can't find command for: $gen.$command"
+    ri $dir -Force -Recurse
+    exit
+}
+
 . $rc["gencmd"]
