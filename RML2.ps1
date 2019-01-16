@@ -37,14 +37,7 @@ if (-not $gen) {
     $gen = "RMVXA"
 }
 
-$rc = $RMLConfig = @{}
 
-
-$ruby = (Get-Item "RM3/ruby/bin/ruby.exe").FullName
-$f2s  = (Get-Item "RML/file2script.rb").FullName
-
-$rc["ruby"] = $ruby
-$rc["f2s"]  = $f2s
 $dir = "runid_" + [guid]::NewGuid()
 
 if (-not (Test-Path $dir)) {
@@ -53,28 +46,7 @@ if (-not (Test-Path $dir)) {
 }
 
 $dir = (Get-Item $dir).FullName
-$rc["dir"] = $dir
-$rc["template"] = (Get-Item "Templates").FullName
-$rc["tpldir"] = $rc["template"] + "\" + $gen
-$rc["commondir"] = $rc["template"] + "\.common"
-$rc["tplrml"] = $rc["tpldir"] + "\.rml"
-$rc["command"]  = $Command
-$rc["gen"]  = $gen
-$rc["gendir"] = $dir + "\.rml"
-$rc["gencmd"] = $rc["gendir"] + "\" + $rc["command"] + ".ps1"
-
-
-$rc["code"]  = $code
-$rc["file"]  = $file
-$rc["fromDir"] = $FromDir
-$rc["zipFile"] = $ZipFile
-$rc["argList"] = $ArgList
-$rc["title"]   = $Title
-$rc["NoRemove"] = $NoRemove
-$rc["empty"]    = $Empty
-$rc["outFile"]  = $OutFile
-$rc["RML.ruby"] = (Get-Item "RML").FullName
-
+$rc = $RMLConfig = & "./config.ps1" $gen $dir $command
 if ($NoCopy) {
     Copy-Item ($rc["tplrml"] + "\*") $rc["gendir"] -Force -Recurse
 } else {

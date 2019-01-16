@@ -1,0 +1,1 @@
+powershell -NoExit -Command "Import-Module %~dp0\psm\rmk.psm1"
