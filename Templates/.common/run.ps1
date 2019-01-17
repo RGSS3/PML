@@ -1,6 +1,6 @@
 . ($RMLConfig["commondir"] + "\source.ps1")
 pushd $dir
-$proc =      Start-Process "Game.exe" -WindowStyle Hidden -PassThru
+$proc =      Start-Process "Game.exe" -PassThru
 $proc.id | Out-File "pid" 
 Wait-Process -id $proc.id
 popd

@@ -1,9 +1,12 @@
+require 'drb/drb'
 require 'open3'
 TIMEOUT = 0.02
 CHANNEL  = {}
 INQUEUE  = {}
 OUTQUEUE = {}
 @id = 0
+
+public
 
 def fresh
   :"_#{@id += 1}"
@@ -31,6 +34,39 @@ def debug_eval(str)
     nil
 end
 
+DEBUG_EVAL = {}
+
+def report_value(id, val)
+    DEBUG_EVAL[id] ||= Queue.new
+    DEBUG_EVAL[id] << val
+    val
+end
+
+def report_end(id)
+    report_value id, :exit
+end
+
+def debug_eval_wait(str)
+    name = fresh
+    DEBUG_EVAL[name] ||= Queue.new
+    puts str.gsub("%%", name.inspect)
+    post_msg :debug, str.gsub("%%", name.inspect)
+    ret = []
+    loop do
+        a = DEBUG_EVAL[name].shift
+        if a == :exit
+            break
+        else
+            ret << a
+        end
+    end
+    ret
+end
+
+def debug_eval_value(str)
+    debug_eval_wait("Debug.report_value %%, eval(#{str.inspect}); Debug.report_end %%").first
+end
+
 def start_daemon(port)
     @daemon = Thread.new {
         Thread.stop
@@ -56,6 +92,7 @@ def report(str)
         puts "[REPORT]#{x}"
     }
     puts ""
+    str
 end
 
 def channel_run_once
@@ -124,5 +161,9 @@ IO.write "pid", "#{Process.pid}\n"
     end
 end
 
+drburi = "druby://localhost:8787"
+DRb.start_service(drburi, self)
+puts "DRb Thread listening at localhost:8787"
 require 'irb'
 IRB.start
+

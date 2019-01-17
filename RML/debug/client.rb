@@ -37,6 +37,14 @@ if !$debug_init
         def report(str)
             Debug.run([:report, str]){}
         end
+
+        def report_value(name, str)
+            Debug.run([:report_value, name, str]){}
+        end
+
+        def report_end(name)
+            Debug.run([:report_end, name]){}
+        end
     end
 
     class << Graphics

@@ -27,6 +27,7 @@ $empty = $rc["empty"]
 
 while (1) {
     if ($file) {
+        Copy-Item $file "$dir/main.rb"
         &$ruby $f2s "$dir/main.rb" "$dir/Data/Scripts.$suf"
         break
     }
